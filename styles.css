@@ -1,0 +1,403 @@
+/*
+    Modern Article Card
+    -------------------
+    This project uses:
+    - CSS custom properties
+    - OKLCH colors
+    - Relative units
+    - Fluid clamp() values
+    - Grid and Flexbox
+    - Optical text trimming
+*/
+
+/* =========================
+   1. Design tokens
+   ========================= */
+
+:root {
+    color-scheme: light;
+
+    /* Font families */
+    --font-body:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    /* Light theme colors */
+    --color-page: oklch(97% 0.015 250);
+    --color-surface: oklch(99.5% 0.004 250);
+    --color-text: oklch(24% 0.03 255);
+    --color-text-muted: oklch(42% 0.03 255);
+    --color-accent: oklch(46% 0.16 255);
+    --color-accent-hover: oklch(38% 0.14 255);
+    --color-on-accent: oklch(100% 0 0);
+    --color-border: oklch(86% 0.025 250);
+    --color-focus: oklch(55% 0.2 250);
+    --color-shadow: oklch(20% 0.03 255 / 0.16);
+
+    /* Spacing tokens */
+    --space-1: 0.375rem;
+    --space-2: 0.625rem;
+    --space-3: 0.875rem;
+    --space-4: 1.25rem;
+    --space-5: 1.75rem;
+    --space-6: 2.5rem;
+
+    /* Shape and sizing tokens */
+    --radius-small: 0.65rem;
+    --radius-medium: 1rem;
+    --radius-large: 1.5rem;
+    --page-width: 72rem;
+    --card-width: 60rem;
+
+    /* Transition tokens */
+    --transition-fast: 160ms ease;
+    --transition-medium: 240ms ease;
+}
+
+/* JavaScript adds this attribute to the html element. */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --color-page: oklch(16% 0.025 255);
+    --color-surface: oklch(22% 0.03 255);
+    --color-text: oklch(95% 0.015 250);
+    --color-text-muted: oklch(78% 0.025 250);
+    --color-accent: oklch(78% 0.13 250);
+    --color-accent-hover: oklch(84% 0.1 250);
+    --color-on-accent: oklch(16% 0.025 255);
+    --color-border: oklch(38% 0.035 255);
+    --color-focus: oklch(82% 0.14 95);
+    --color-shadow: oklch(5% 0.01 255 / 0.4);
+}
+
+
+/* =========================
+   2. Basic reset
+   ========================= */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+    background-color: var(--color-page);
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    background-color: var(--color-page);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    transition:
+        background-color var(--transition-medium),
+        color var(--transition-medium);
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+button,
+a {
+    font: inherit;
+}
+
+a {
+    color: inherit;
+}
+
+
+/* =========================
+   3. Header
+   ========================= */
+
+.site-header {
+    width: min(100% - 2rem, var(--page-width));
+    margin-inline: auto;
+    padding-block: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.site-logo {
+    color: var(--color-text);
+    font-size: 1.125rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+}
+
+.site-logo:hover {
+    color: var(--color-accent);
+}
+
+.site-logo:focus-visible {
+    outline: 0.2rem solid var(--color-focus);
+    outline-offset: 0.25rem;
+    border-radius: var(--radius-small);
+}
+
+.theme-toggle {
+    min-height: 2.75rem;
+    padding: var(--space-2) var(--space-3);
+    border: 0.125rem solid var(--color-border);
+    border-radius: 100vw;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    font-size: 0.925rem;
+    font-weight: 700;
+    line-height: 1.2;
+    transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
+}
+
+.theme-toggle:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    transform: translateY(-0.1rem);
+}
+
+.theme-toggle:focus-visible {
+    outline: 0.2rem solid var(--color-focus);
+    outline-offset: 0.25rem;
+}
+
+.theme-toggle__icon {
+    font-size: 1.15em;
+    line-height: 1;
+}
+
+
+/* =========================
+   4. Main page layout
+   ========================= */
+
+.page {
+    min-height: calc(100vh - 11rem);
+    padding: clamp(1.5rem, 4vw, 4rem) 1rem;
+    display: grid;
+    place-items: center;
+}
+
+
+/* =========================
+   5. Article card
+   ========================= */
+
+.article-card {
+    width: min(100%, var(--card-width));
+    overflow: hidden;
+    border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-large);
+    display: grid;
+
+    /*
+        Each column must be at least 18rem wide.
+        When there is insufficient room for two columns,
+        Grid automatically places them into one column.
+    */
+    grid-template-columns:
+        repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+
+    background-color: var(--color-surface);
+    box-shadow:
+        0 1rem 2.5rem var(--color-shadow);
+    transition:
+        background-color var(--transition-medium),
+        border-color var(--transition-medium),
+        box-shadow var(--transition-medium);
+}
+
+.article-card__image-container {
+    min-height: 18rem;
+    overflow: hidden;
+}
+
+.article-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    aspect-ratio: 3 / 2;
+    transition:
+        transform var(--transition-medium),
+        filter var(--transition-medium);
+}
+
+.article-card:hover .article-card__image {
+    transform: scale(1.025);
+    filter: saturate(1.05);
+}
+
+.article-card__content {
+    padding: clamp(1.5rem, 4vw, 3.5rem);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--space-4);
+}
+
+
+/* =========================
+   6. Category badge
+   ========================= */
+
+.article-card__badge {
+    margin: 0;
+    padding: 0.55em 0.85em;
+    border-radius: 100vw;
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+
+    /*
+        Cutting-edge optical trimming.
+        Unsupported browsers ignore this declaration and
+        retain the line-height and padding fallback above.
+    */
+    text-box: trim-both cap alphabetic;
+}
+
+
+/* =========================
+   7. Article typography
+   ========================= */
+
+.article-card__title {
+    margin: 0;
+    color: var(--color-text);
+
+    /*
+        Minimum: 2rem
+        Fluid engine: 1.35rem + 2vw
+        Maximum: 3.5rem
+    */
+    font-size: clamp(2rem, 1.35rem + 2vw, 3.5rem);
+    font-weight: 850;
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+}
+
+.article-card__description {
+    max-width: 55ch;
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+    line-height: 1.7;
+    text-wrap: pretty;
+}
+
+
+/* =========================
+   8. Read Article button
+   ========================= */
+
+.article-card__button {
+    min-height: 3rem;
+    margin-top: var(--space-1);
+    padding: 0.85em 1.15em;
+    border: 0.125rem solid var(--color-accent);
+    border-radius: var(--radius-small);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-decoration: none;
+    transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
+
+    /*
+        Cutting-edge optical trimming.
+        The line-height and padding above remain the fallback.
+    */
+    text-box: trim-both cap alphabetic;
+}
+
+.article-card__button:hover {
+    border-color: var(--color-accent-hover);
+    background-color: var(--color-accent-hover);
+    transform: translateY(-0.125rem);
+}
+
+.article-card__button:focus-visible {
+    outline: 0.2rem solid var(--color-focus);
+    outline-offset: 0.25rem;
+}
+
+.article-card__button-icon {
+    font-size: 1.2em;
+    line-height: 1;
+    transition: transform var(--transition-fast);
+}
+
+.article-card__button:hover .article-card__button-icon {
+    transform: translateX(0.2em);
+}
+
+
+/* =========================
+   9. Footer
+   ========================= */
+
+.site-footer {
+    width: min(100% - 2rem, var(--page-width));
+    margin-inline: auto;
+    padding-block: var(--space-5);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.site-footer p {
+    margin: 0;
+}
+
+
+/* =========================
+   10. Reduced motion
+   ========================= */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto;
+        transition-duration: 0.01ms;
+        animation-duration: 0.01ms;
+        animation-iteration-count: 1;
+    }
+}
